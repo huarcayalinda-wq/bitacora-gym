@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitácora de Gym</title>
+<style>
+  :root{
+    --bg-base:#17181A;
+    --bg-surface:#1F2123;
+    --bg-surface-2:#26282B;
+    --line:#33363A;
+    --upper:#C13A2E;
+    --upper-dim:#5A2620;
+    --lower:#2E6F9E;
+    --lower-dim:#1F3C50;
+    --cardio:#D9A62E;
+    --cardio-dim:#5C4A1E;
+    --rest:#4A4D50;
+    --text-primary:#F2EFEA;
+    --text-muted:#9B9C9E;
+    --text-faint:#68696C;
+    --gold:#E3B341;
+    --danger:#D9603B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg-base);
+    color:var(--text-primary);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:0;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 60px;}
+
+  /* ---------- Header ---------- */
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+  .title-block .eyebrow{
+    font-family:"SF Mono",Consolas,Monaco,monospace;
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--text-faint); margin-bottom:4px;
+  }
+  h1{
+    font-family:'Arial Black', 'Helvetica Neue', sans-serif;
+    font-weight:900;
+    font-size:30px;
+    letter-spacing:-.01em;
+    margin:0;
+    text-transform:uppercase;
+  }
+  .streak-plate{
+    display:flex; align-items:center; gap:10px;
+    background:var(--bg-surface); border:1px solid var(--line);
+    border-radius:100px; padding:8px 18px 8px 10px;
+  }
+  .plate-disc{
+    width:38px;height:38px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #f0d98a, var(--gold) 55%, #a5791d 100%);
+    display:flex;align-items:center;justify-content:center;
+    font-family:"SF Mono",Consolas,monospace; font-weight:700; font-size:15px; color:#2b1f05;
+    box-shadow: inset 0 0 0 3px rgba(0,0,0,.25);
+    flex-shrink:0;
+  }
+  .streak-label{line-height:1.1;}
+  .streak-label .n{display:block;font-family:"SF Mono",Consolas,monospace;font-size:18px;font-weight:700;}
+  .streak-label .l{display:block;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;}
+
+  /* ---------- Suggestion banner ---------- */
+  .banner{
+    background:var(--bg-surface);
+    border:1px solid var(--line);
+    border-left:4px solid var(--gold);
+    border-radius:8px;
+    padding:14px 16px;
+    margin-bottom:20px;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+  }
+  .banner.warn{border-left-color:var(--danger);}
+  .banner .tag{
+    font-family:"SF Mono",Consolas,monospace; font-size:10px; text-transform:uppercase;
+    letter-spacing:.1em; color:var(--gold); background:rgba(227,179,65,.12);
+    padding:3px 8px; border-radius:4px; flex-shrink:0;
+  }
+  .banner.warn .tag{color:var(--danger); background:rgba(217,96,59,.12);}
+  .banner p{margin:0;font-size:14px;color:var(--text-primary);}
+  .banner p b{color:var(--text-primary);}
+
+  /* ---------- Layout ---------- */
+  .grid{display:grid; grid-template-columns: 1.5fr 1fr; gap:20px;}
+  @media (max-width:760px){ .grid{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--bg-surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px;
+  }
+  .card h2{
+    font-family:'Arial Black','Helvetica Neue',sans-serif;
+    font-size:13px; text-transform:uppercase; letter-spacing:.08em;
+    margin:0 0 14px; color:var(--text-muted); font-weight:900;
+  }
+
+  /* ---------- Calendar ---------- */
+  .cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .cal-nav button{
+    background:var(--bg-surface-2); border:1px solid var(--line); color:var(--text-primary);
+    width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:14px;
+  }
+  .cal-nav button:hover{background:var(--line);}
+  .cal-month{font-family:"SF Mono",Consolas,monospace; font-size:14px; text-transform:capitalize; letter-spacing:.04em;}
+  .weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px;}
+  .weekdays span{
+    text-align:center;font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;
+  }
+  .days{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .day{
+    aspect-ratio:1;
+    border-radius:8px;
+    background:var(--bg-surface-2);
+    border:1px solid transparent;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer; position:relative;
+    font-family:"SF Mono",Consolas,monospace; font-size:12px; color:var(--text-muted);
+    transition:transform .08s ease;
+  }
+  .day:hover{transform:scale(1.05);}
+  .day.empty{visibility:hidden;cursor:default;}
+  .day.today{border-color:var(--gold);}
+  .day.selected{outline:2px solid var(--text-primary); outline-offset:1px;}
+  .day .num{font-weight:600;}
+  .day.type-upper{background:var(--upper-dim); color:#f2c9c3;}
+  .day.type-lower{background:var(--lower-dim); color:#c7dcec;}
+  .day.type-cardio{background:var(--cardio-dim); color:#f0dfae;}
+  .day.type-rest{background:var(--bg-surface-2); color:var(--text-faint);}
+  .creatine-dot{
+    position:absolute; bottom:4px; width:5px; height:5px; border-radius:50%;
+    background:var(--gold);
+  }
+  .legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:14px; font-size:11px; color:var(--text-muted);}
+  .legend span{display:flex;align-items:center;gap:5px;}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .legend .lu{background:var(--upper);} .legend .ll{background:var(--lower);}
+  .legend .lc{background:var(--cardio);} .legend .lr{background:var(--rest);}
+  .legend .lg{background:var(--gold);}
+
+  /* ---------- Day panel ---------- */
+  .day-panel{margin-top:16px; padding-top:16px; border-top:1px solid var(--line);}
+  .day-panel .dp-date{font-family:"SF Mono",Consolas,monospace; font-size:12px; color:var(--text-muted); text-transform:capitalize; margin-bottom:10px;}
+  .type-buttons{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+  .type-btn{
+    flex:1; min-width:70px;
+    padding:9px 6px; border-radius:6px; border:1px solid var(--line);
+    background:var(--bg-surface-2); color:var(--text-muted); cursor:pointer;
+    font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.03em;
+  }
+  .type-btn[data-t="upper"].active{background:var(--upper); color:#fff; border-color:var(--upper);}
+  .type-btn[data-t="lower"].active{background:var(--lower); color:#fff; border-color:var(--lower);}
+  .type-btn[data-t="cardio"].active{background:var(--cardio); color:#221a04; border-color:var(--cardio);}
+  .type-btn[data-t="rest"].active{background:var(--rest); color:#fff; border-color:var(--rest);}
+
+  .field-row{margin-bottom:12px;}
+  .field-row label{display:block; font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px;}
+  .creatine-toggle{display:flex; align-items:center; gap:8px; cursor:pointer;}
+  .creatine-toggle .box{
+    width:18px;height:18px;border-radius:4px;border:1px solid var(--line); background:var(--bg-surface-2);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .creatine-toggle .box.on{background:var(--gold); border-color:var(--gold);}
+  .creatine-toggle .box.on::after{content:"✓"; font-size:12px; color:#2b1f05; font-weight:800;}
+  .creatine-toggle span.tlabel{font-size:13px;}
+
+  .sleep-times{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .sleep-time-input{display:flex; flex-direction:column; gap:4px; flex:1; min-width:110px;}
+  .sleep-time-input .st-label{font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em;}
+  .sleep-time-input input[type=time]{
+    background:var(--bg-surface-2); border:1px solid var(--line); border-radius:6px;
+    color:var(--text-primary); padding:7px 8px; font-size:13px; font-family:"SF Mono",Consolas,monospace;
+    width:100%;
+  }
+  .sleep-hours{
+    font-family:"SF Mono",Consolas,monospace; font-size:13px; font-weight:700; color:var(--gold);
+    white-space:nowrap; padding-top:14px;
+  }
+
+  textarea, input[type=text]{
+    width:100%; background:var(--bg-surface-2); border:1px solid var(--line); border-radius:6px;
+    color:var(--text-primary); padding:9px 10px; font-size:13px; font-family:inherit; resize:none;
+  }
+  textarea{min-height:54px;}
+  textarea:focus, input:focus{outline:1px solid var(--gold);}
+
+  .dp-clear{
+    background:none; border:none; color:var(--text-faint); font-size:11px; cursor:pointer;
+    text-decoration:underline; padding:0; margin-top:2px;
+  }
+
+  /* ---------- Balance / stats ---------- */
+  .balance-bar{
+    display:flex; align-items:flex-end; justify-content:center; gap:2px; height:64px; margin:10px 0 8px;
+  }
+  .stack{display:flex; flex-direction:column-reverse; gap:2px; align-items:center;}
+  .plate-mini{width:34px;height:9px;border-radius:3px;}
+  .plate-mini.u{background:var(--upper);}
+  .plate-mini.l{background:var(--lower);}
+  .bar-fulcrum{width:2px;height:60px;background:var(--line);margin:0 6px;}
+  .balance-caption{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:16px;}
+  .balance-caption b{color:var(--text-primary);}
+
+  .stat-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-row .v{font-family:"SF Mono",Consolas,monospace;font-weight:700;}
+
+  .tips{font-size:12.5px;color:var(--text-muted);line-height:1.5;margin:0;padding-left:16px;}
+  .tips li{margin-bottom:8px;}
+  .tips b{color:var(--text-primary);}
+
+  footer{margin-top:28px;text-align:center;font-size:11px;color:var(--text-faint);}
+  .logout-btn{background:none;border:none;color:var(--text-faint);font-size:11px;text-decoration:underline;cursor:pointer;padding:0;}
+
+  /* ---------- Auth screen ---------- */
+  #authScreen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .auth-box{
+    width:100%; max-width:340px; background:var(--bg-surface); border:1px solid var(--line);
+    border-radius:10px; padding:28px 24px;
+  }
+  .auth-box h1{font-size:20px; margin:0 0 4px;}
+  .auth-box p.sub{font-size:12px; color:var(--text-muted); margin:0 0 20px;}
+  .auth-box input{
+    width:100%; background:var(--bg-surface-2); border:1px solid var(--line); border-radius:6px;
+    color:var(--text-primary); padding:10px 12px; font-size:13px; margin-bottom:10px; font-family:inherit;
+  }
+  .auth-box button{
+    width:100%; padding:10px; border-radius:6px; border:none; background:var(--gold); color:#2b1f05;
+    font-weight:700; cursor:pointer; font-size:13px; margin-bottom:8px;
+  }
+  .auth-box .alt-btn{background:var(--bg-surface-2); color:var(--text-primary); border:1px solid var(--line);}
+  .auth-box .auth-msg{font-size:12px; margin-top:10px; min-height:16px;}
+  .auth-box .auth-msg.err{color:var(--danger);}
+  .auth-box .auth-msg.ok{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<div id="authScreen" style="display:none;">
+  <div class="auth-box">
+    <h1>Bitácora de Gym</h1>
+    <p class="sub">Inicia sesión para ver tus datos desde cualquier dispositivo.</p>
+    <input type="email" id="authEmail" placeholder="tu@correo.com" autocomplete="email">
+    <input type="password" id="authPassword" placeholder="Contraseña" autocomplete="current-password">
+    <button id="authLoginBtn">Iniciar sesión</button>
+    <button id="authSignupBtn" class="alt-btn">Crear cuenta</button>
+    <div class="auth-msg" id="authMsg"></div>
+  </div>
+</div>
+
+<div class="wrap" id="appScreen" style="display:none;">
+
+  <header>
+    <div class="title-block">
+      <div class="eyebrow">Lunes a viernes · rotación continua</div>
+      <h1>Bitácora de Gym</h1>
+    </div>
+    <div class="streak-plate">
+      <div class="plate-disc" id="streakNum">0</div>
+      <div class="streak-label"><span class="n" id="streakText">0 días</span><span class="l">Racha activa</span></div>
+    </div>
+  </header>
+
+  <div id="banners"></div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="cal-nav">
+        <button id="prevMonth">‹</button>
+        <div class="cal-month" id="monthLabel"></div>
+        <button id="nextMonth">›</button>
+      </div>
+      <div class="weekdays">
+        <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+      </div>
+      <div class="days" id="daysGrid"></div>
+      <div class="legend">
+        <span><i class="lu"></i>Superior</span>
+        <span><i class="ll"></i>Inferior</span>
+        <span><i class="lc"></i>Cardio</span>
+        <span><i class="lr"></i>Descanso</span>
+        <span><i class="lg"></i>Creatina tomada</span>
+      </div>
+
+      <div class="day-panel" id="dayPanel" style="display:none;">
+        <div class="dp-date" id="dpDate"></div>
+        <div class="type-buttons" id="typeButtons">
+          <button class="type-btn" data-t="upper">Superior</button>
+          <button class="type-btn" data-t="lower">Inferior</button>
+          <button class="type-btn" data-t="cardio">Cardio</button>
+          <button class="type-btn" data-t="rest">Descanso</button>
+        </div>
+
+        <div class="field-row">
+          <label class="creatine-toggle" id="creatineToggle">
+            <span class="box"></span><span class="tlabel">Creatina tomada hoy</span>
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label>Sueño</label>
+          <div class="sleep-times">
+            <div class="sleep-time-input">
+              <span class="st-label">Dormiste</span>
+              <input type="time" id="sleepStart" value="22:00">
+            </div>
+            <div class="sleep-time-input">
+              <span class="st-label">Despertaste</span>
+              <input type="time" id="sleepEnd" value="09:00">
+            </div>
+            <div class="sleep-hours" id="sleepHoursOut">—</div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label>Carga / ejercicio principal (opcional)</label>
+          <input type="text" id="loadInput" placeholder="ej. Sentadilla 60kg x5">
+        </div>
+
+        <div class="field-row">
+          <label>Nota rápida</label>
+          <textarea id="noteInput" placeholder="cómo te sentiste, algo que dolió, etc."></textarea>
+        </div>
+
+        <button class="dp-clear" id="clearDay">Borrar registro de este día</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>Balance de la semana</h2>
+        <div class="balance-bar" id="balanceBar"></div>
+        <div class="balance-caption">
+          <span>Superior: <b id="upperCount">0</b></span>
+          <span>Inferior: <b id="lowerCount">0</b></span>
+        </div>
+        <div class="stat-row"><span>Próxima sesión sugerida</span><span class="v" id="nextSuggestion">—</span></div>
+        <div class="stat-row"><span>Entrenos este mes</span><span class="v" id="monthCount">0</span></div>
+        <div class="stat-row"><span>Creatina — días seguidos</span><span class="v" id="creatineStreak">0</span></div>
+        <div class="stat-row"><span>Sueño promedio (semana)</span><span class="v" id="avgSleep">—</span></div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <h2>Complementos</h2>
+        <ul class="tips">
+          <li><b>48h por grupo:</b> evita repetir el mismo tipo dos días seguidos sin un descanso o el otro grupo entre medio.</li>
+          <li><b>Deload:</b> cada 5–6 semanas seguidas de entreno completo, considera una semana más suave.</li>
+          <li><b>Creatina:</b> tómala todos los días, no solo los de gym — la consistencia diaria es lo que importa.</li>
+          <li><b>Sueño:</b> si el rating baja varios días seguidos, es señal de ajustar antes de que afecte la carga.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer>Sincronizado con tu cuenta. <button class="logout-btn" id="logoutBtn">Cerrar sesión</button></footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<script>
+(function(){
+  const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const WEEKDAYS_SHORT = ['dom','lun','mar','mié','jue','vie','sáb'];
+
+  // ---------- Supabase config ----------
+  // Reemplaza estos dos valores con los de tu proyecto (Settings → API en supabase.com)
+  const SUPABASE_URL = 'TU_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let state = { days: {} };
+  let viewDate = new Date();
+  viewDate.setDate(1);
+  let selectedISO = null;
+  let currentUserId = null;
+
+  function iso(d){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function todayISO(){ return iso(new Date()); }
+  function parseISO(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+  function isWeekday(d){ const day = d.getDay(); return day>=1 && day<=5; }
+
+  async function loadFromDB(){
+    const { data, error } = await supabase
+      .from('gym_data')
+      .select('state')
+      .eq('user_id', currentUserId)
+      .maybeSingle();
+    if(error){ console.error('load error', error); state = { days:{} }; return; }
+    if(data && data.state){ state = data.state; if(!state.days) state.days = {}; }
+    else { state = { days:{} }; }
+  }
+
+  async function save(){
+    try{
+      const { error } = await supabase
+        .from('gym_data')
+        .upsert({ user_id: currentUserId, state: state, updated_at: new Date().toISOString() });
+      if(error) console.error('save error', error);
+    }catch(e){ console.error('save error', e); }
+  }
+
+  // ---------- Auth ----------
+  function showAuthMsg(text, kind){
+    const el = document.getElementById('authMsg');
+    el.textContent = text;
+    el.className = 'auth-msg ' + (kind || '');
+  }
+
+  async function handleLogin(){
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    if(!email || !password){ showAuthMsg('Completa correo y contraseña.', 'err'); return; }
+    showAuthMsg('Ingresando…', '');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if(error){ showAuthMsg(error.message, 'err'); return; }
+    onAuthenticated(data.user.id);
+  }
+
+  async function handleSignup(){
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    if(!email || !password){ showAuthMsg('Completa correo y contraseña.', 'err'); return; }
+    if(password.length < 6){ showAuthMsg('La contraseña debe tener al menos 6 caracteres.', 'err'); return; }
+    showAuthMsg('Creando cuenta…', '');
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if(error){ showAuthMsg(error.message, 'err'); return; }
+    if(data.session){ onAuthenticated(data.user.id); }
+    else{ showAuthMsg('Cuenta creada. Revisa tu correo para confirmar, luego inicia sesión.', 'ok'); }
+  }
+
+  async function handleLogout(){
+    await supabase.auth.signOut();
+    currentUserId = null;
+    document.getElementById('appScreen').style.display = 'none';
+    document.getElementById('authScreen').style.display = 'flex';
+  }
+
+  async function onAuthenticated(userId){
+    currentUserId = userId;
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    await loadFromDB();
+    renderAll();
+  }
+
+  document.getElementById('authLoginBtn').addEventListener('click', handleLogin);
+  document.getElementById('authSignupBtn').addEventListener('click', handleSignup);
+  document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+  async function init(){
+    const { data } = await supabase.auth.getSession();
+    if(data && data.session){
+      onAuthenticated(data.session.user.id);
+    }else{
+      document.getElementById('authScreen').style.display = 'flex';
+    }
+  }
+
+  function entry(d){ return state.days[iso(d)] || null; }
+  function entryByISO(s){ return state.days[s] || null; }
+
+  // ---------- Calendar rendering ----------
+  function renderCalendar(){
+    document.getElementById('monthLabel').textContent = MONTHS[viewDate.getMonth()] + ' ' + viewDate.getFullYear();
+    const grid = document.getElementById('daysGrid');
+    grid.innerHTML = '';
+
+    const year = viewDate.getFullYear(), month = viewDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    let startOffset = firstDay.getDay() - 1; // Monday-start
+    if(startOffset < 0) startOffset = 6;
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+
+    for(let i=0;i<startOffset;i++){
+      const empty = document.createElement('div');
+      empty.className = 'day empty';
+      grid.appendChild(empty);
+    }
+
+    for(let d=1; d<=daysInMonth; d++){
+      const date = new Date(year, month, d);
+      const dISO = iso(date);
+      const cell = document.createElement('div');
+      const ent = entryByISO(dISO);
+      let cls = 'day';
+      if(ent && ent.type) cls += ' type-'+ent.type;
+      if(dISO === todayISO()) cls += ' today';
+      if(dISO === selectedISO) cls += ' selected';
+      cell.className = cls;
+      cell.innerHTML = '<span class="num">'+d+'</span>';
+      if(ent && ent.creatine){
+        const dot = document.createElement('div');
+        dot.className = 'creatine-dot';
+        cell.appendChild(dot);
+      }
+      cell.addEventListener('click', () => selectDay(dISO));
+      grid.appendChild(cell);
+    }
+  }
+
+  // ---------- Day panel ----------
+  function selectDay(dISO){
+    selectedISO = dISO;
+    const panel = document.getElementById('dayPanel');
+    panel.style.display = 'block';
+    const date = parseISO(dISO);
+    const label = WEEKDAYS_SHORT[date.getDay()] + ' ' + date.getDate() + ' de ' + MONTHS[date.getMonth()];
+    document.getElementById('dpDate').textContent = label;
+
+    const ent = entryByISO(dISO) || {};
+
+    document.querySelectorAll('.type-btn').forEach(b=>{
+      b.classList.toggle('active', ent.type === b.dataset.t);
+    });
+    document.getElementById('creatineToggle').querySelector('.box').classList.toggle('on', !!ent.creatine);
+    document.querySelectorAll('.sleep-scale button').forEach(b=>{
+      b.classList.toggle('active', String(ent.sleep||'') === b.dataset.s);
+    });
+    document.getElementById('loadInput').value = ent.load || '';
+    document.getElementById('noteInput').value = ent.note || '';
+    document.getElementById('sleepStart').value = ent.sleepStart || '22:00';
+    document.getElementById('sleepEnd').value = ent.sleepEnd || '09:00';
+    updateSleepHoursDisplay();
+
+    renderCalendar();
+  }
+
+  function sleepDurationHours(start, end){
+    if(!start || !end) return null;
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    let startMin = sh*60+sm;
+    let endMin = eh*60+em;
+    if(endMin <= startMin) endMin += 24*60; // crosses midnight
+    return (endMin - startMin) / 60;
+  }
+
+  function updateSleepHoursDisplay(){
+    const start = document.getElementById('sleepStart').value;
+    const end = document.getElementById('sleepEnd').value;
+    const hrs = sleepDurationHours(start, end);
+    document.getElementById('sleepHoursOut').textContent = hrs !== null ? hrs.toFixed(1)+'h' : '—';
+  }
+
+  function getOrCreateEntry(dISO){
+    if(!state.days[dISO]) state.days[dISO] = {};
+    return state.days[dISO];
+  }
+
+  document.getElementById('typeButtons').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.type-btn');
+    if(!btn || !selectedISO) return;
+    const ent = getOrCreateEntry(selectedISO);
+    ent.type = (ent.type === btn.dataset.t) ? null : btn.dataset.t;
+    if(!ent.type) delete state.days[selectedISO].type;
+    save();
+    selectDay(selectedISO);
+    renderAll();
+  });
+
+  document.getElementById('creatineToggle').addEventListener('click', ()=>{
+    if(!selectedISO) return;
+    const ent = getOrCreateEntry(selectedISO);
+    ent.creatine = !ent.creatine;
+    save();
+    selectDay(selectedISO);
+    renderAll();
+  });
+
+  document.getElementById('sleepStart').addEventListener('input', (e)=>{
+    if(!selectedISO) return;
+    const ent = getOrCreateEntry(selectedISO);
+    ent.sleepStart = e.target.value;
+    updateSleepHoursDisplay();
+    save();
+  });
+  document.getElementById('sleepEnd').addEventListener('input', (e)=>{
+    if(!selectedISO) return;
+    const ent = getOrCreateEntry(selectedISO);
+    ent.sleepEnd = e.target.value;
+    updateSleepHoursDisplay();
+    save();
+  });
+
+  document.getElementById('loadInput').addEventListener('input', (e)=>{
+    if(!selectedISO) return;
+    const ent = getOrCreateEntry(selectedISO);
+    ent.load = e.target.value;
+    save();
+  });
+  document.getElementById('noteInput').addEventListener('input', (e)=>{
+    if(!selectedISO) return;
+    const ent = getOrCreateEntry(selectedISO);
+    ent.note = e.target.value;
+    save();
+  });
+
+  document.getElementById('clearDay').addEventListener('click', ()=>{
+    if(!selectedISO) return;
+    delete state.days[selectedISO];
+    save();
+    document.getElementById('dayPanel').style.display = 'none';
+    selectedISO = null;
+    renderAll();
+  });
+
+  document.getElementById('prevMonth').addEventListener('click', ()=>{
+    viewDate.setMonth(viewDate.getMonth()-1);
+    renderCalendar();
+  });
+  document.getElementById('nextMonth').addEventListener('click', ()=>{
+    viewDate.setMonth(viewDate.getMonth()+1);
+    renderCalendar();
+  });
+
+  // ---------- Stats ----------
+  function allEntriesSorted(){
+    return Object.keys(state.days).sort();
+  }
+
+  function computeStreak(){
+    // consecutive weekdays trained (upper/lower/cardio), walking backward from today.
+    // weekends never break the streak.
+    let d = new Date();
+    let count = 0;
+    // if today is a weekday and not yet logged as trained, start check from yesterday
+    let cursor = new Date(d);
+    for(let i=0;i<400;i++){
+      const dISO = iso(cursor);
+      if(isWeekday(cursor)){
+        const ent = entryByISO(dISO);
+        const trained = ent && ent.type && ent.type !== 'rest';
+        if(dISO === todayISO() && !trained){
+          // today not logged yet — skip without breaking, move to yesterday
+        } else if(trained){
+          count++;
+        } else {
+          break;
+        }
+      }
+      cursor.setDate(cursor.getDate()-1);
+    }
+    return count;
+  }
+
+  function computeCreatineStreak(){
+    let cursor = new Date();
+    let count = 0;
+    for(let i=0;i<400;i++){
+      const dISO = iso(cursor);
+      const ent = entryByISO(dISO);
+      if(dISO === todayISO() && !(ent && ent.creatine)){
+        // skip today if not logged yet
+      } else if(ent && ent.creatine){
+        count++;
+      } else {
+        break;
+      }
+      cursor.setDate(cursor.getDate()-1);
+    }
+    return count;
+  }
+
+  function currentWeekRange(){
+    const now = new Date();
+    const day = now.getDay();
+    const diffToMon = (day === 0 ? -6 : 1 - day);
+    const monday = new Date(now); monday.setDate(now.getDate()+diffToMon);
+    const days = [];
+    for(let i=0;i<7;i++){ const dd = new Date(monday); dd.setDate(monday.getDate()+i); days.push(dd); }
+    return days;
+  }
+
+  function nextSuggestedType(){
+    const dates = allEntriesSorted().filter(d => d <= todayISO()).reverse();
+    for(const dISO of dates){
+      const ent = state.days[dISO];
+      if(ent.type === 'upper') return 'Inferior';
+      if(ent.type === 'lower') return 'Superior';
+    }
+    return 'Superior (inicio de rotación)';
+  }
+
+  function checkBackToBack(){
+    // find last two trained weekdays and see if same type
+    const dates = allEntriesSorted().filter(d => d <= todayISO()).reverse();
+    const trained = dates.filter(d => state.days[d].type && state.days[d].type !== 'rest');
+    if(trained.length >= 2){
+      const [a,b] = trained;
+      if(state.days[a].type === state.days[b].type && state.days[a].type !== 'cardio'){
+        return state.days[a].type;
+      }
+    }
+    return null;
+  }
+
+  function checkDeload(){
+    // count consecutive weeks (Mon-Fri) where at least 4 of 5 weekdays are trained
+    let weeksFull = 0;
+    let cursorMonday = currentWeekRange()[0];
+    for(let w=0; w<12; w++){
+      const monday = new Date(cursorMonday); monday.setDate(monday.getDate() - 7*w);
+      let trainedCount = 0, loggedFully = true;
+      for(let i=0;i<5;i++){
+        const dd = new Date(monday); dd.setDate(monday.getDate()+i);
+        if(dd > new Date()) { loggedFully = false; continue; }
+        const ent = entryByISO(iso(dd));
+        if(ent && ent.type && ent.type !== 'rest') trainedCount++;
+      }
+      if(trainedCount >= 4) weeksFull++;
+      else break;
+    }
+    return weeksFull;
+  }
+
+  function renderStats(){
+    const streak = computeStreak();
+    document.getElementById('streakNum').textContent = streak;
+    document.getElementById('streakText').textContent = streak + (streak===1 ? ' día' : ' días');
+
+    const week = currentWeekRange();
+    let upperC = 0, lowerC = 0;
+    week.forEach(d=>{
+      const ent = entryByISO(iso(d));
+      if(ent && ent.type === 'upper') upperC++;
+      if(ent && ent.type === 'lower') lowerC++;
+    });
+    document.getElementById('upperCount').textContent = upperC;
+    document.getElementById('lowerCount').textContent = lowerC;
+
+    const bar = document.getElementById('balanceBar');
+    bar.innerHTML = '';
+    const leftStack = document.createElement('div'); leftStack.className = 'stack';
+    for(let i=0;i<upperC;i++){ const p=document.createElement('div'); p.className='plate-mini u'; leftStack.appendChild(p); }
+    const fulcrum = document.createElement('div'); fulcrum.className = 'bar-fulcrum';
+    const rightStack = document.createElement('div'); rightStack.className = 'stack';
+    for(let i=0;i<lowerC;i++){ const p=document.createElement('div'); p.className='plate-mini l'; rightStack.appendChild(p); }
+    bar.appendChild(leftStack); bar.appendChild(fulcrum); bar.appendChild(rightStack);
+
+    document.getElementById('nextSuggestion').textContent = nextSuggestedType();
+
+    const monthCount = Object.keys(state.days).filter(d=>{
+      const dt = parseISO(d);
+      return dt.getFullYear()===viewDate.getFullYear() && dt.getMonth()===viewDate.getMonth() && state.days[d].type && state.days[d].type !== 'rest';
+    }).length;
+    document.getElementById('monthCount').textContent = monthCount;
+
+    document.getElementById('creatineStreak').textContent = computeCreatineStreak();
+
+    let sleepVals = [];
+    week.forEach(d=>{
+      const ent = entryByISO(iso(d));
+      if(ent && ent.sleepStart && ent.sleepEnd){
+        const hrs = sleepDurationHours(ent.sleepStart, ent.sleepEnd);
+        if(hrs !== null) sleepVals.push(hrs);
+      }
+    });
+    document.getElementById('avgSleep').textContent = sleepVals.length
+      ? (sleepVals.reduce((a,b)=>a+b,0)/sleepVals.length).toFixed(1)+'h'
+      : '—';
+
+    renderBanners();
+  }
+
+  function renderBanners(){
+    const container = document.getElementById('banners');
+    container.innerHTML = '';
+
+    const repeated = checkBackToBack();
+    if(repeated){
+      const b = document.createElement('div');
+      b.className = 'banner warn';
+      b.innerHTML = '<span class="tag">48h</span><p>Registraste <b>'+(repeated==='upper'?'Superior':'Inferior')+'</b> dos días seguidos. Si tu rotación real fue distinta, ignora esto — si no, dale un día al otro grupo antes de repetir.</p>';
+      container.appendChild(b);
+    }
+
+    const deloadWeeks = checkDeload();
+    if(deloadWeeks >= 5){
+      const b = document.createElement('div');
+      b.className = 'banner';
+      b.innerHTML = '<span class="tag">Deload</span><p>Llevas <b>'+deloadWeeks+' semanas seguidas</b> entrenando los 5 días completos. Vale la pena meter una semana más suave.</p>';
+      container.appendChild(b);
+    }
+  }
+
+  function renderAll(){
+    renderCalendar();
+    renderStats();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
